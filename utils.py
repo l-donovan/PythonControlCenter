@@ -37,3 +37,18 @@ class _GetchWindows:
 
 
 getch = _Getch()
+
+def moveUp(num):
+	return chr(27) + '[' + str(num) + 'A'
+
+def moveDown(num):
+	return chr(27) + '[' + str(num) + 'B'
+
+def moveRight(num):
+	return chr(27) + '[' + str(num) + 'C'
+
+def moveLeft(num):
+	return chr(27) + '[' + str(num) + 'D'
+
+def clear():
+	return chr(27) + '[2J'

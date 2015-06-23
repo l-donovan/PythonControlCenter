@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 from sys import exit
-from utils import getch
+from utils import getch, moveUp, moveDown, moveRight, moveLeft, clear
 from os import getcwd, listdir
 from os.path import isfile, join
 
@@ -29,21 +29,6 @@ def runCommand(command):
 
 def checkFiles():
 	return [ f for f in listdir(getcwd()) if isfile(join(getcwd(), f)) ]
-
-def moveUp(num):
-	return chr(27) + '[' + str(num) + 'A'
-
-def moveDown(num):
-	return chr(27) + '[' + str(num) + 'B'
-
-def moveRight(num):
-	return chr(27) + '[' + str(num) + 'C'
-
-def moveLeft(num):
-	return chr(27) + '[' + str(num) + 'D'
-
-def clear():
-	return chr(27) + '[2J'
 
 def mainLoop():
 	stringIn, stringInPrev, commandResultPrev = "", "", ""
@@ -92,6 +77,10 @@ def mainLoop():
 		stringInLine = "".join(" " * len(stringInPrev)) + "\r" + prompt + stringIn
 		resultsLine = "".join(" " * len(str(resultsPrev))) + "\r" + str(results)
 
-		print(moveUp(1) + commandResultLine + '\n' + prompt + stringInLine + '\n' + resultsLine + moveUp(1), end='\r')
+		print(moveUp(1) + \
+			commandResultLine + '\n' + \
+			prompt + stringInLine + '\n' + \
+			resultsLine + \
+			moveUp(1), end='\r')
 
 mainLoop()
