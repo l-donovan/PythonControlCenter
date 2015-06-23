@@ -5,7 +5,6 @@ from sys import exit
 from utils import *
 from os import getcwd, listdir
 from os.path import isfile, join
-from re import compile
 
 def runCommand(command):
 	baseCommand = command.split()[0]
