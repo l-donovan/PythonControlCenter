@@ -69,10 +69,11 @@ def mainLoop():
 		stringInLine = (stringIn[:width - 3 - len(prompt)] + '...') if len(stringIn) > (width - 3 - len(prompt)) else stringIn
 		resultsLine = (str(results)[:width - 3] + '...') if len(str(results)) > (width - 3) else str(results)
 
-		print(moveUp(1) + \
+		print(moveUp(1) + moveLeft(width) + \
 			clearLine() + commandResultLine + '\n' + \
 			clearLine() + prompt + stringInLine + '\n' + \
 			clearLine() + resultsLine + \
 			moveUp(1), end='\r')
+		print(moveRight(len(stringIn) + 1), end='')
 
 mainLoop()
