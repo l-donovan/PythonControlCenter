@@ -2,21 +2,10 @@
 from __future__ import print_function
 
 from sys import exit
-from utils import getch, moveUp, moveDown, moveRight, moveLeft, clear, clearLine, getTerminalSize
+from utils import *
 from os import getcwd, listdir
 from os.path import isfile, join
-
-import re
-
-def fuzzyfinder(user_input, collection):
-	suggestions = []
-	pattern = '.*?'.join(user_input)
-	regex = re.compile('%s' % pattern)
-	for item in collection:
-		match = regex.search(item)
-		if match:
-			suggestions.append((len(match.group()), match.start(), item))
-	return [x for _, _, x in sorted(suggestions)]
+from re import compile
 
 def runCommand(command):
 	baseCommand = command.split()[0]
@@ -69,7 +58,7 @@ def mainLoop():
 						print(readFile.read())
 						commandResult = commandPrefix + "End \"" + results[0] + "\""
 					except IndexError:
-						commandResult = commandPrefix + "No file selected!"
+						commandResult = commandPrefix + "File not found"
 				stringIn = ""
 			else:
 				commandResult = commandPrefix
