@@ -2,78 +2,96 @@
 from __future__ import print_function
 
 from sys import exit
-from utils import *
 from os import getcwd, listdir
 from os.path import isfile, join
+from utils import *
 
-def runCommand(command):
-	baseCommand = command.split()[0]
-	args = command.split()[1:]
-	if baseCommand == "quit":
-		exit(0)
-	elif baseCommand == "print":
-		return [" ".join(args), ""]
-	elif baseCommand == "testResult":
-		return [None, " ".join(args)]
-	else:
-		return [None, "Command not recognized"]
+class environment():
+	def checkFiles(self):
+		return [ f for f in listdir(self.dir) if isfile(join(self.dir, f)) ]
 
-def checkFiles():
-	return [ f for f in listdir(getcwd()) if isfile(join(getcwd(), f)) ]
-
-def mainLoop():
-	(width, height) = getTerminalSize()
-	stringIn, stringInPrev, commandResultPrev = "", "", ""
-	prompt = ">"
-	commandPrefix = "* "
-	commandResult = commandPrefix
-	paths = checkFiles()
-	results = fuzzyfinder("", paths)
-	temp_results = (str(results)[:width - 3] + '...') if len(str(results)) > (width - 3) else str(results)
-	print(commandPrefix + '\n' + prompt + '\n' + temp_results + moveUp(2))
-	while True:
-		charIn = getch()
-		stringInPrev = stringIn
-		resultsPrev = results
-		commandResultPrev = commandResult
-
-		if charIn == '\x03' or charIn == '\x1A': 
-			print(clear() + "Please exit with the '/quit' command\n")
-		elif charIn == '\x7F' or charIn == '\x08': # x7f is technically delete, but lots of systems use it as backspace
-			stringIn = stringIn[:-1]
-		elif charIn == "\t":
-			stringIn = results[0]
-		elif charIn == "\r":
+	def runCommand(self, command):
+		# Return format: [printResult, commandResult, systemFlag]
+		baseCommand = command.split()[0]
+		args = command.split()[1:]
+		if baseCommand == "exit":
+			return [None, None, "exit, " + args[0]]
+		elif baseCommand == "print":
+			return [" ".join(args), None, None]
+		elif baseCommand == "testResult":
+			return [None, " ".join(args), None]
+		elif baseCommand == "termInfo":
+			output = "Window size: " + str(getTerminalSize()[0]) + " * " + str(getTerminalSize()[1])
+			return [output, None, None]
+		elif baseCommand == "clear":
 			print(clear())
-			if stringIn != "":
-				if stringIn[0] == "/":
-					output = runCommand(stringIn[1:])
-					if output[0]: print(output[0] + '\n')
-					commandResult = commandPrefix + output[1]
-				else:
-					try:
-						readFile = open(results[0])
-						print(commandPrefix + "Begin \"" + results[0] + "\"")
-						print(readFile.read())
-						commandResult = commandPrefix + "End \"" + results[0] + "\""
-					except IndexError:
-						commandResult = commandPrefix + "File not found"
-				stringIn = ""
-			else:
-				commandResult = commandPrefix
+			return [clear(), None, None]
 		else:
-			stringIn += charIn
+			return [None, "Command not recognized", None]
 
-		results = fuzzyfinder(stringIn, paths)
-		commandResultLine = (commandResult[:width - 3] + '...') if len(commandResult) > (width - 3) else commandResult
-		stringInLine = (stringIn[:width - 3 - len(prompt)] + '...') if len(stringIn) > (width - 3 - len(prompt)) else stringIn
-		resultsLine = (str(results)[:width - 3] + '...') if len(str(results)) > (width - 3) else str(results)
+	def __init__(self, cd):
+		self.dir = cd
+		(self.width, self.height) = getTerminalSize()
+		self.stringIn, self.stringInPrev, self.commandResultPrev = "", "", ""
+		self.prompt = ">"
+		self.commandPrefix = "* "
+		self.commandResult = self.commandPrefix
+		self.paths = self.checkFiles()
+		self.results = fuzzyfinder("", self.paths)
+		self.temp_results = (str(self.results)[:self.width - 3] + '...') if len(str(self.results)) > (self.width - 3) else str(self.results)
 
-		print(moveUp(1) + moveLeft(width) + \
-			clearLine() + commandResultLine + '\n' + \
-			clearLine() + prompt + stringInLine + '\n' + \
-			clearLine() + resultsLine + \
-			moveUp(1), end='\r')
-		print(moveRight(len(stringIn) + 1), end='')
+	def run(self):
+		print(self.commandPrefix + '\n' + self.prompt + '\n' + self.temp_results + moveUp(2))
+		while True:
+			self.charIn = getch()
+			stringInPrev = self.stringIn
+			self.resultsPrev = self.results
+			self.commandResultPrev = self.commandResult
 
-mainLoop()
+			if self.charIn == '\x03' or self.charIn == '\x1A': 
+				print(clear() + "Please exit with the '/exit' command\n")
+			elif self.charIn == '\x7F' or self.charIn == '\x08': # x7f is technically delete, but lots of systems use it as backspace
+				self.stringIn = self.stringIn[:-1]
+			elif self.charIn == "\t":
+				self.stringIn = self.results[0]
+			elif self.charIn == "\r":
+				print(clear())
+				if self.stringIn != "":
+					if self.stringIn[0] == "/":
+						self.output = self.runCommand(self.stringIn[1:])
+						if self.output[2] and self.output[2].split(',')[0].strip() == "exit": 
+							return(int(self.output[2].split(',')[1].strip()))
+						if self.output[0]: 
+							print(self.output[0] + '\n')
+						self.commandResult = self.commandPrefix + self.output[1] if self.output[1] else self.commandPrefix
+					else:
+						try:
+							self.readFile = open(self.results[0])
+							print(self.commandPrefix + "Begin \"" + self.results[0] + "\"")
+							print(self.readFile.read())
+							self.commandResult = self.commandPrefix + "End \"" + self.results[0] + "\""
+						except IndexError:
+							self.commandResult = self.commandPrefix + "File not found"
+					self.stringIn = ""
+				else:
+					self.commandResult = self.commandPrefix
+			else:
+				self.stringIn += self.charIn
+
+			self.results = fuzzyfinder(self.stringIn, self.paths)
+			self.commandResultLine = (self.commandResult[:self.width - 3] + '...') if len(self.commandResult) > (self.width - 3) else self.commandResult
+			self.stringInLine = (self.stringIn[:self.width - 3 - len(self.prompt)] + '...') if len(self.stringIn) > (self.width - 3 - len(self.prompt)) else self.stringIn
+			self.resultsLine = (str(self.results)[:self.width - 3] + '...') if len(str(self.results)) > (self.width - 3) else str(self.results)
+
+			print(moveUp(1) + moveLeft(self.width) + \
+				clearLine() + self.commandResultLine + '\n' + \
+				clearLine() + self.prompt + self.stringInLine + '\n' + \
+				clearLine() + self.resultsLine + \
+				moveUp(1), end='\r')
+			print(moveRight(len(self.stringIn) + 1), end='')
+
+	def refresh(self):
+		self.__init__(self.dir)
+
+x = environment(getcwd())
+print(x.run())
