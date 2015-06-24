@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from editorpy import Environment
+from editor import Environment
 from os import getcwd
 
 env = Environment(getcwd())
