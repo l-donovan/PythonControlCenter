@@ -2,11 +2,11 @@
 from __future__ import print_function
 
 from sys import exit
-from os import getcwd, listdir
+from os import listdir
 from os.path import isfile, join
 from utils import *
 
-class environment():
+class Environment():
 	def checkFiles(self):
 		return [ f for f in listdir(self.dir) if isfile(join(self.dir, f)) ]
 
@@ -88,10 +88,7 @@ class environment():
 				clearLine() + self.prompt + self.stringInLine + '\n' + \
 				clearLine() + self.resultsLine + \
 				moveUp(1), end='\r')
-			print(moveRight(len(self.stringIn) + 1), end='')
+			print(moveRight(len(self.stringIn) + len(self.prompt)), end='')
 
 	def refresh(self):
 		self.__init__(self.dir)
-
-x = environment(getcwd())
-print(x.run())
