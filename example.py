@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-from editor import Environment
+from editorpy import Environment
 from os import getcwd
 
 env = Environment(getcwd())
-env.prompt = "Pointlessly Long Prompt!>"
-print(env.run())
+env.prompt = ">>>"
+print("env exited with code: " + str(env.run()))
