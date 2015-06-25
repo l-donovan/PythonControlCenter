@@ -5,6 +5,7 @@ from os import listdir
 from os.path import isfile, join
 from sys import exit
 from utils import *
+from re import compile
 
 class Environment:
 	def getFiles(self):
@@ -41,29 +42,37 @@ class Environment:
 			except IndexError:
 				return [None, None, "exit,0"]
 		elif baseCommand == "print":
-			return [" ".join(args), None, None]
+			return [" ".join(args), u'\u2713', None]
 		elif baseCommand == "clear":
-			return [clear(), None, None]
+			return [clear(), u'\u2713', None]
 		elif baseCommand == "termInfo":
 			text = "Window size: " + str(getTerminalSize()[0]) + " * " + str(getTerminalSize()[1])
-			return [text, None, None]
+			text += "\n Safety buffer size: " + str(self.safety)
+			return [text, u'\u2713', None]
 		elif baseCommand == "testResult":
 			return [None, " ".join(args[0:]), None]
+		elif baseCommand == "set":
+			self.vars[args[0]] = " ".join(args[1:])
+			return [None, u'\u2713', None]
+		elif baseCommand == "vars":
+			for i in self.vars:
+				print("{'%s': '%s'}" % (i, self.vars[i]))
+			return [None, u'\u2713', None]
 		elif baseCommand == "do":
 			for i in range(0, int(args[0])):
 				output = self.runCommand(" ".join(args[1:]))
 				self.printOut(output[0], output[1], " ".join(args[1:]), "")
 				print(moveLeft(len(command) + 1))
-			return [None, None, None]
+			return [None, u'\u2713', None]
 		else:
-			return [None, "Command not Found", None]
+			return [None, u"\u2717 Command not Found", None]
 
 
 	def __init__(self, cd):
 		self.dir = cd
 		(self.width, self.height) = getTerminalSize()
 		self.stringIn = ""
-		self.charIn = ""
+		self.charIn = ''
 		self.stringInHist = []
 		self.prompt = ">"
 		self.commandResultPrefix = "* "
@@ -71,17 +80,23 @@ class Environment:
 		self.tabCompleteIndex = -1
 		self.output = ""
 		self.shouldPrint = True
+		self.vars = {}
+		self.safety = -1
 
 	def run(self):
 		self.refresh()
 		self.printOut(self.output, self.commandResult, self.stringIn, self.results)
 		while True:
-			self.results = fuzzyfinder(self.stringIn, self.paths)
+			#self.results = fuzzyfinder(self.stringIn, self.paths)
+			try:
+				self.results = fuzzyfinder(self.stringIn, self.paths)
+			except:
+				self.results = fuzzyfinder(self.stringIn[:self.safety], self.paths)
+				self.safety -= 1
 			self.charIn = getch()
-
+			print("|||\n\n\n" + self.charIn + "\n\n\n|||")
 			if self.charIn == '\x03' or self.charIn == '\x1A': 
-				exit(1) #TEMP
-				print(clear() + "Please exit with the '/exit' command\n")
+				self.commandResult = u"\u2717 Please exit with the '/exit' command"
 			elif self.charIn == '\x7F' or self.charIn == '\x08':
 				self.stringIn = self.stringIn[:-1]
 			elif self.charIn == '\t':
@@ -90,6 +105,8 @@ class Environment:
 				else:
 					self.tabCompleteIndex = 0
 				self.stringIn = self.results[self.tabCompleteIndex]
+			elif self.charIn == '\x1b[A':
+				break
 			elif self.charIn == '\r':
 				self.tabCompleteIndex = -1
 				print(clear(), end='\r')
@@ -107,14 +124,15 @@ class Environment:
 							self.output = "Begin \"" + self.results[0] + "\"\n"
 							self.output += self.readFile.read()
 							self.readFile.close()
-							self.commandResult = "End \"" + self.results[0] + "\""
+							self.commandResult = u"\u2713 End \"" + self.results[0] + "\""
 							self.results = fuzzyfinder("", self.paths)
 						except IndexError:
-							self.commandResult = "File not found"
+							self.commandResult = u"\u2717 File not found"
 					self.stringIn = ""
 				else:
 					self.output = ""
 					self.commandResult = ""
+				self.safety = -1
 			else:
 				self.stringIn += self.charIn
 			if self.shouldPrint:
